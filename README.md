@@ -198,17 +198,16 @@ Environment variables:
 
 The server will be available at `http://localhost:8000`.
 
-### Using Alibaba Cloud Cloud Hosting
+### Using Alipay Cloud Run
 
-You can also deploy the server using [Alibaba Cloud Cloud Hosting](https://cloud.alipay.com/), which provides free container resources for new users.
+You can also deploy the server on [Alipay Cloud Run](https://cloud.alipay.com/) (新人可免费使用容器资源):
 
 <p align="center">
   <img src="assets/deploy.png" alt="MCP SSE Proxy Server Deployment on Alibaba Cloud">
 </p>
 
-Deployment steps:
-1. Create a new container service
-2. Configure the container with the following settings:
+1. Create a new service in Cloud Run
+2. Configure the service with the following settings:
    - Image: `codefriday123/mcpproxy:1.0`
    - Port: `8000`
    - Environment variables:
@@ -216,7 +215,9 @@ Deployment steps:
      - `SHARED_SESSION`: true/false
      - `MCP_SERVER_CONFIG`: Your MCP server configuration
 
-The server will be automatically deployed and managed by Alibaba Cloud.
+3. Deploy the service
+
+The server will be available at the provided Cloud Run endpoint.
 
 ## Logging
 

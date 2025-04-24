@@ -198,6 +198,27 @@ docker run -d \
 
 服务器将在 `http://localhost:8000` 可用。
 
+### 使用支付宝云托管
+
+你也可以在[支付宝云托管](https://cloud.alipay.com/)上部署服务器（新人可免费使用容器资源）：
+
+<p align="center">
+  <img src="assets/deploy.png" alt="MCP SSE 代理服务器在阿里云上的部署">
+</p>
+
+1. 在云托管中创建新服务
+2. 配置服务参数：
+   - 镜像：`codefriday123/mcpproxy:1.0`
+   - 端口：`8000`
+   - 环境变量：
+     - `AUTH_KEY`: 你的服务器访问密钥
+     - `SHARED_SESSION`: true/false
+     - `MCP_SERVER_CONFIG`: 你的 MCP 服务器配置
+
+3. 部署服务
+
+服务器将在云托管提供的端点上可用。
+
 ## 日志记录
 
 服务器使用 Python 的 logging 模块记录详细日志，包括：
