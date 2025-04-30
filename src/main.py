@@ -18,7 +18,7 @@ from jsonrpc import (
     create_success_response, create_notification, validate_request
 )
 from config import get_server_params, AUTH_KEY
-from proxy import MCPProxy
+from proxy import MCPProxy, serialize_result
 
 # Configure logging with more details
 logging.basicConfig(
@@ -289,6 +289,8 @@ async def sse_stream(session):
                     break
                 if isinstance(message, dict):
                     message = json.dumps(message)
+                elif hasattr(message, '__dict__'):
+                    message = json.dumps(serialize_result(message))
                 logger.debug(f"Sending message to client {session.session_id}: {message}")
                 yield f"data: {message}\n\n"
         finally:
@@ -354,22 +356,6 @@ async def handle_sse(request):
     response.headers["Access-Control-Allow-Origin"] = "*"
     logger.info(f"SSE response prepared for session {session_id}")
     return response
-
-
-def serialize_result(result):
-    """Serialize result to JSON-compatible format"""
-    if result is None:
-        return None
-    elif isinstance(result, (str, int, float, bool)):
-        return result
-    elif isinstance(result, (list, tuple)):
-        return [serialize_result(item) for item in result]
-    elif isinstance(result, dict):
-        return {k: serialize_result(v) for k, v in result.items()}
-    elif hasattr(result, '__dict__'):
-        return {k: serialize_result(v) for k, v in result.__dict__.items() if not k.startswith('_')}
-    else:
-        return str(result)
 
 
 # Predefined method handlers mapping
