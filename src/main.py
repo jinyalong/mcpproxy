@@ -289,8 +289,6 @@ async def sse_stream(session):
                     break
                 if isinstance(message, dict):
                     message = json.dumps(message)
-                elif hasattr(message, '__dict__'):
-                    message = json.dumps(serialize_result(message))
                 logger.debug(f"Sending message to client {session.session_id}: {message}")
                 yield f"data: {message}\n\n"
         finally:
@@ -311,7 +309,13 @@ async def send_keep_alive(session):
     try:
         while not session.closed:
             await asyncio.sleep(30)
-            await session.message_queue.put({"type": "ping", "timestamp": int(time.time())})
+            await session.message_queue.put({
+                "jsonrpc": "2.0",
+                "method": "ping",
+                "params": {
+                    "timestamp": int(time.time())
+                }
+            })
     except asyncio.CancelledError:
         pass
 

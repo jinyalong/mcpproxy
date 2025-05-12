@@ -40,6 +40,9 @@ class SSESession:
         try:
             logger.info(f"Received server message: {message}")
             if isinstance(message, types.ServerNotification):
+                # 使用 model_dump() 序列化 Pydantic 模型
+                content = message.root.model_dump()
+                # 确保消息符合 JSON-RPC 2.0 格式
                 notification = {
                     "jsonrpc": "2.0",
                     "method": "notifications/message",
@@ -47,7 +50,7 @@ class SSESession:
                         "level": "info",
                         "data": {
                             "type": message.root.__class__.__name__,
-                            "content": serialize_result(message.root)
+                            "content": content
                         }
                     }
                 }
@@ -264,7 +267,33 @@ class MCPProxy:
                     return JSONResponse(create_error_response(METHOD_NOT_FOUND, f"Method '{method}' not found", id))
 
                 resp = await handler(client_session, params)
-                await session.send_message(create_success_response(serialize_result(resp), id))
+                # 使用 model_dump() 序列化 Pydantic 模型
+                if hasattr(resp, 'model_dump'):
+                    resp = resp.model_dump()
+                
+                # Ensure capabilities have the correct structure for initialize response
+                if method == "initialize" and isinstance(resp, dict):
+                    if "capabilities" in resp:
+                        capabilities = resp["capabilities"]
+                        if capabilities.get("experimental") is None:
+                            capabilities["experimental"] = {}
+                        if capabilities.get("logging") is None:
+                            capabilities["logging"] = {}
+                        if capabilities.get("prompts") is None:
+                            capabilities["prompts"] = {}
+                        if capabilities.get("resources") is None:
+                            capabilities["resources"] = {}
+                        if "tools" in capabilities and capabilities["tools"].get("listChanged") is None:
+                            capabilities["tools"]["listChanged"] = False
+                        if resp.get("instructions") is None:
+                            resp["instructions"] = ""
+                
+                # Ensure nextCursor is a string in list responses
+                if method in ["tools/list", "prompts/list", "resources/list", "resources/templates/list"] and isinstance(resp, dict):
+                    if resp.get("nextCursor") is None:
+                        resp["nextCursor"] = ""
+                
+                await session.send_message(create_success_response(resp, id))
                 return JSONResponse(create_success_response("ok", id))
 
             except TypeError as e:
